@@ -1,6 +1,4 @@
-import subprocess
 import logging
-from contextlib import contextmanager
 from time import sleep
 import cv2  # type: ignore
 import numpy as np  # type: ignore
@@ -12,6 +10,9 @@ import os
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Student:
+
+    def __init__(self, name):
+        self.name = name
     
     @classmethod
     def images_folder(cls):
@@ -32,33 +33,19 @@ class Student:
         def __init__(self, name, path):
             self.name = name
             self.path = path
-            logging.debug("Initializing Picamera2")
-            try:
-                self.picam2 = Picamera2()
-                self.camera_config = self.picam2.create_preview_configuration(
-                    main={"size": (4096, 2592)},
-                    lores={"size": (640, 480), "format": "YUV420"}
-                )
-                logging.info("Initialization successful.")
-            except RuntimeError as e:
-                logging.error(f"Camera __init__ sequence did not complete: {e}")
-                raise
-        
-        @contextmanager
-        def camera_session(self):
-            self.picam2.configure(self.camera_config)
-            self.picam2.start_preview(Preview.QTGL)
-            self.picam2.start()
-            try:
-                yield
-            finally:
-                self.picam2.stop_preview()
-                self.picam2.stop()
-        
+
         def take_picture(self):
-            with self.camera_session():
-                sleep(5)
-                self.picam2.capture_file(f"{self.path}/{self.name}.jpg")
+            self.picam2 = Picamera2()
+            self.camera_config = self.picam2.create_preview_configuration(
+                                        main={"size": (4096, 2592)},
+                                        lores={"size": (640, 480), "format": "YUV420"})
+            self.picam2.configure(self.camera_config)
+            self.picam2.start_preview(Preview.QT)
+            self.picam2.start()
+            sleep(5)
+            self.picam2.capture_file(f"{self.path}/{self.name}.jpg")
+            self.picam2.stop_preview()
+            self.picam2.stop()             
             
     class Recognition:
         
@@ -93,9 +80,9 @@ class Student:
                 logging.error("student_encoding empty")
             return False
 
-    def __init__(self, name):
-        self.name = name
-        
+    class DBManagement:
+        pass
+
     def add_student_img(self, path):
         self.path = path
         photo_obj = self.PhotoManagement(self.name, self.path)
@@ -105,39 +92,24 @@ class Student:
         check_obj = self.Recognition(student_img_path, temp_img_path)
         return check_obj.check()
 
-def restart_camera_service():
-    try:
-        result = subprocess.run(['sudo', 'systemctl', 'restart', 'raspi-config'], capture_output=True, text=True, check=True)
-        logging.info("Service restarted successfully")
-        logging.info(result.stdout)
-    except subprocess.CalledProcessError as e:
-        logging.error("Failed to restart the service")
-        logging.error(e.stderr)
+
 
 def main():
-    while True:
-        try:
-            folder_p = Student.images_folder()
-            folder_t = Student.temporary_folder()
-            username = input("Enter your name: ").strip()
-            student_obj = Student(username)
-            user_input = int(input("Are you registered in the system? (1-yes / 0-no): "))
 
-            if user_input:
-                try:
-                    student_obj.add_student_img(folder_t)
-                except RuntimeError:
-                    restart_camera_service()
-                    student_obj.add_student_img(folder_t)
-                if student_obj.check_student(f"{folder_p}/{username}.jpg", f"{folder_t}/{username}.jpg"):
-                    print(f"You're {username}")
-                else:
-                    print(f"You're not {username}")
-            else:
-                student_obj.add_student_img(folder_p)
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
-            restart_camera_service()
+    username = input("Enter your name: ").strip()
+    student_obj = Student(username)
+    user_input = int(input("Choose option(0 - add / 1 - add_temp / 2 - check): "))
+    if user_input == 0:
+        student_obj.add_student_img(Student.images_folder())
+    elif user_input == 1:
+        student_obj.add_student_img(Student.temporary_folder())
+    elif user_input == 2:
+        if student_obj.check_student(f"{Student.images_folder()}/{username}.jpg", f"{Student.temporary_folder()}/{username}.jpg"):
+            print("Fetele se potrivesc")
+        else:
+            print("Fetele nu se potrivesc")
 
 if __name__ == '__main__':
     main()
+
+    
