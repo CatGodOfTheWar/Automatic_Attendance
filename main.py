@@ -41,18 +41,26 @@ class Student:
         
         def take_picture(self, name, path):
             self.name = name
-            self.path = path
-            self.picam2 = Picamera2()
-            self.camera_config = self.picam2.create_preview_configuration(
+            self.path = path         
+            try:
+                self.picam2 = Picamera2()
+                self.camera_config = self.picam2.create_preview_configuration(
                                         main={"size": (4096, 2592)},
                                         lores={"size": (640, 480), "format": "YUV420"})
-            self.picam2.configure(self.camera_config)
-            self.picam2.start_preview(Preview.QT)
-            self.picam2.start()
-            sleep(5)
-            self.picam2.capture_file(f"{self.path}/{self.name}.jpg")
-            self.picam2.stop_preview()
-            self.picam2.stop()             
+                self.picam2.configure(self.camera_config)
+                self.picam2.start_preview(Preview.QT)
+                self.picam2.start()
+                sleep(5)
+                self.picam2.capture_file(f"{self.path}/{self.name}.jpg")
+                self.picam2.stop()
+            except RuntimeError as e:
+                print(f"Failed to acquire camera: {e}")
+                print("Retrying in 5 seconds...")
+                sleep(5)
+                self.take_picture(self.name, self.folder) 
+            finally:
+                if hasattr(self, 'picam2'):
+                    self.picam2.close()    
             
     class Recognition:
 
@@ -148,24 +156,27 @@ def main():
 
     first_name = input("Enter your first name: ").strip()
     last_name = input("Enter your last name: ").strip()
-    username = last_name + "_" + first_name
-    student_obj = Student(username)
-    user_input = int(input("Choose option(0 - add / 1 - add_temp / 2 - check / 3 - DB / 4 - reset): "))
-    if user_input == 0:
-        student_obj.photoManagement.take_picture(student_obj.name, Student.images_folder())
-    elif user_input == 1:
-        student_obj.photoManagement.take_picture(student_obj.name, Student.temporary_folder())
-    elif user_input == 2:
-        if student_obj.recognition.check(f"{Student.images_folder()}/{username}.jpg", f"{Student.temporary_folder()}/{username}.jpg"):
-            print("Fetele se potrivesc")
-        else:
-            print("Fetele nu se potrivesc")
-    elif user_input == 3:
-        student_obj.dBManagement.db_students_init()
-        student_obj.dBManagement.db_add_student(first_name, last_name)
-        print(student_obj.dBManagement.db_get_students())  
-    elif user_input == 4:
-        Student.reset()
+    username = last_name + " " + first_name
+    while True:
+        student_obj = Student(username)
+        user_input = int(input("Choose option(0 - add / 1 - add_temp / 2 - check / 3 - DB / 4 - reset): "))
+        if user_input == 0:
+            student_obj.photoManagement.take_picture(student_obj.name, Student.images_folder())
+        elif user_input == 1:
+            student_obj.photoManagement.take_picture(student_obj.name, Student.temporary_folder())
+        elif user_input == 2:
+            if student_obj.recognition.check(f"{Student.images_folder()}/{username}.jpg", f"{Student.temporary_folder()}/{username}.jpg"):
+                print("Fetele se potrivesc")
+            else:
+                print("Fetele nu se potrivesc")
+        elif user_input == 3:
+            student_obj.dBManagement.db_students_init()
+            student_obj.dBManagement.db_add_student(first_name, last_name)
+            print(student_obj.dBManagement.db_get_students())  
+        elif user_input == 4:
+            Student.reset()
+            break
+        del student_obj
 
 
 if __name__ == '__main__':
