@@ -4,15 +4,18 @@ import cv2  # type: ignore
 import numpy as np  # type: ignore
 from picamera2 import MappedArray, Picamera2, Preview  # type: ignore
 import face_recognition  # type: ignore
+import sqlite3
 import os
 
-# Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Student:
 
     def __init__(self, name):
         self.name = name
+        self.photoManagement = self.PhotoManagement()
+        self.recognition = self.Recognition()
+        self.dBManagement = self.DBManagement()
     
     @classmethod
     def images_folder(cls):
@@ -28,13 +31,17 @@ class Student:
             os.makedirs(temp_img)
         return temp_img
     
+    @classmethod
+    def reset(cls):
+        os.system(f"rm -rf {cls.images_folder()}/*")
+        os.system(f"rm -rf {cls.temporary_folder()}/*")
+        os.system("rm -rf students.db")
+    
     class PhotoManagement:
         
-        def __init__(self, name, path):
+        def take_picture(self, name, path):
             self.name = name
             self.path = path
-
-        def take_picture(self):
             self.picam2 = Picamera2()
             self.camera_config = self.picam2.create_preview_configuration(
                                         main={"size": (4096, 2592)},
@@ -48,15 +55,7 @@ class Student:
             self.picam2.stop()             
             
     class Recognition:
-        
-        def __init__(self, student_img_path, temp_img_path):
-            self.student_img_path = student_img_path
-            self.temp_img_path = temp_img_path
-            self.student_img = self.load_and_convert(self.student_img_path)
-            self.temp_img = self.load_and_convert(self.temp_img_path)
-            self.student_encoding = self.encode(self.student_img)
-            self.temp_encoding = self.encode(self.temp_img)
-            
+
         def load_and_convert(self, path):
             img = cv2.imread(path)
             if img is not None:
@@ -70,7 +69,13 @@ class Student:
                     return face_encoding[0]
             return None
 
-        def check(self):
+        def check(self, student_img_path, temp_img_path):
+            self.student_img_path = student_img_path
+            self.temp_img_path = temp_img_path
+            self.student_img = self.load_and_convert(self.student_img_path)
+            self.temp_img = self.load_and_convert(self.temp_img_path)
+            self.student_encoding = self.encode(self.student_img)
+            self.temp_encoding = self.encode(self.temp_img)
             if self.student_encoding is not None:
                 if self.temp_encoding is not None:
                     return face_recognition.compare_faces([self.student_encoding], self.temp_encoding)[0]
@@ -81,33 +86,87 @@ class Student:
             return False
 
     class DBManagement:
-        pass
 
-    def add_student_img(self, path):
-        self.path = path
-        photo_obj = self.PhotoManagement(self.name, self.path)
-        photo_obj.take_picture()
-    
-    def check_student(self, student_img_path, temp_img_path):
-        check_obj = self.Recognition(student_img_path, temp_img_path)
-        return check_obj.check()
+        def db_connect(self):
+            return sqlite3.connect('students.db')
+        
+        def db_execute(self, query, params=None, fetch=False):
+            with self.db_connect() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                conn.commit()
+                if fetch:
+                    return cursor.fetchall()
 
+        def db_students_init(self):
+            table = '''CREATE TABLE IF NOT EXISTS STUDENTS (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Last_Name CHAR(255) NOT NULL,
+                        First_Name CHAR(255) NOT NULL,
+                        Date DATE DEFAULT CURRENT_DATE
+                    );'''
+            self.db_execute(table)
 
+        def db_get_students(self):
+            query = '''SELECT * FROM STUDENTS ORDER BY Last_Name ASC;'''
+            return self.db_execute(query, fetch=True)
+
+        def db_delete_students(self, student_id):
+            self.student_id = student_id
+            query = '''DELETE FROM STUDENTS WHERE Id = ?'''
+            return self.db_execute(query, (self.student_id,))
+
+        def db_check_student(self, name):
+            self.name = name
+            query = '''SELECT Last_Name || ' ' || First_Name FROM STUDENTS ORDER BY Last_Name ASC;'''
+            students = self._execute(query, fetch=True)
+            return any(student[0] == self.name for student in students)
+
+        def db_add_student(self, first_name, last_name):
+            self.first_name = first_name
+            self.last_name = last_name 
+            query = '''INSERT INTO STUDENTS (Last_Name, First_Name) VALUES (?, ?);'''
+            return self.db_execute(query, (self.last_name, self.first_name))
+
+        def db_update_student(self, student_id, first_name, last_name, date = None):
+            self.student_id = student_id
+            self.first_name = first_name
+            self.last_name = last_name
+            self.date = date
+            if date:
+                query = '''UPDATE STUDENTS SET Last_Name = ?, First_Name = ?, Date = ? WHERE Id = ?;'''
+                params = (self.last_name, self.first_name, self.date, self.student_id)
+            else:
+                query = '''UPDATE STUDENTS SET Last_Name = ?, First_Name = ? WHERE Id = ?;'''  
+                params = (self.last_name, self.first_name, self.student_id)
+            return self.db_execute(query, params)
 
 def main():
 
-    username = input("Enter your name: ").strip()
+    first_name = input("Enter your first name: ").strip()
+    last_name = input("Enter your last name: ").strip()
+    username = last_name + "_" + first_name
     student_obj = Student(username)
-    user_input = int(input("Choose option(0 - add / 1 - add_temp / 2 - check): "))
+    user_input = int(input("Choose option(0 - add / 1 - add_temp / 2 - check / 3 - DB / 4 - reset): "))
     if user_input == 0:
-        student_obj.add_student_img(Student.images_folder())
+        student_obj.photoManagement.take_picture(student_obj.name, Student.images_folder())
     elif user_input == 1:
-        student_obj.add_student_img(Student.temporary_folder())
+        student_obj.photoManagement.take_picture(student_obj.name, Student.temporary_folder())
     elif user_input == 2:
-        if student_obj.check_student(f"{Student.images_folder()}/{username}.jpg", f"{Student.temporary_folder()}/{username}.jpg"):
+        if student_obj.recognition.check(f"{Student.images_folder()}/{username}.jpg", f"{Student.temporary_folder()}/{username}.jpg"):
             print("Fetele se potrivesc")
         else:
             print("Fetele nu se potrivesc")
+    elif user_input == 3:
+        student_obj.dBManagement.db_students_init()
+        student_obj.dBManagement.db_add_student(first_name, last_name)
+        print(student_obj.dBManagement.db_get_students())  
+    elif user_input == 4:
+        Student.reset()
+
 
 if __name__ == '__main__':
     main()
