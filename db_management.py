@@ -26,36 +26,35 @@ class DBManagement:
         self.db_execute(table)
 
     def db_get_students(self):
-        query = '''SELECT * FROM STUDENTS ORDER BY Student_name ASC;'''
-        return self.db_execute(query, fetch=True)
+        return self.db_execute('SELECT * FROM STUDENTS ORDER BY Student_name ASC', fetch=True)
 
     def db_delete_students(self, student_id):
         self.student_id = student_id
-        query = '''DELETE FROM STUDENTS WHERE Id = ?'''
-        return self.db_execute(query, (self.student_id,))
+        return self.db_execute('DELETE FROM STUDENTS WHERE Id = ?', (self.student_id,))
 
     def db_check_student(self, name):
         self.name = name
-        query = '''SELECT Student_name FROM STUDENTS ORDER BY Student_name ASC;'''
-        students = self.db_execute(query, fetch=True)
+        students = self.db_execute('SELECT Student_name FROM STUDENTS ORDER BY Student_name ASC', fetch=True)
         return any(student[0] == self.name for student in students)
 
     def db_add_student(self, name):
         date = None
-        query = '''INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?);'''
-        self.db_execute(query, (name, date))
+        self.db_execute('INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?)', (name, date))
 
     def db_update_student(self, old_name, new_name):
         self.old_name = old_name
         self.new_name = new_name
-        query = '''UPDATE STUDENTS SET Student_name = ? WHERE Student_name = ?;'''
         params = (self.new_name, self.old_name)
-        return self.db_execute(query, params)
+        return self.db_execute('UPDATE STUDENTS SET Student_name = ? WHERE Student_name = ?', params)
 
     def db_record_attendance(self, student_name):
         date = datetime.now().strftime("%Y-%m-%d")
-        self.db_execute('INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?)', (student_name, date))
-
+        check = self.db_execute('SELECT COUNT(*) FROM STUDENTS WHERE student_name = ? AND date = ?', (student_name, date), fetch=True)
+        if not check[0][0]:
+            self.db_execute('INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?)', (student_name, date))
+            print(f"Attendance recorded for student {student_name} on {date}.")
+        else:
+            print("Attendance already recorded")
+        
     def db_get_attendance(self):
-        query = '''SELECT Student_name, Date FROM STUDENTS;'''
-        return self.db_execute(query, fetch=True)
+        return self.db_execute('SELECT Student_name, Date FROM STUDENTS', fetch=True)

@@ -1,10 +1,5 @@
 import logging
-from datetime import datetime
 from time import sleep
-import cv2  # type: ignore
-from picamera2 import Picamera2, Preview  # type: ignore
-import face_recognition  # type: ignore
-import sqlite3
 import os
 import pandas # type: ignore
 
@@ -45,7 +40,6 @@ class Student:
         os.system("rm -rf __pycache__")
         print("Reset done")
         
-        
     def generate_attendance_report(self, file_path='attendance_report.xlsx'):
         attendance_data = self.dBManagement.db_get_attendance()
         dataFrame = pandas.DataFrame(attendance_data, columns=['student_name','date'])
@@ -55,6 +49,15 @@ class Student:
             }).reset_index()
         groupData.columns = ['student_name', 'attendance_count', 'dates']
         groupData.to_excel(file_path, index=False)
+
+    def register_multiple_students(self, file_path):
+        with open(file_path, 'r') as file:
+            students = file.read().splitlines()
+            for student in students:
+                if not self.dBManagement.db_check_student(student):
+                    self.dBManagement.db_add_student(student)
+                else:
+                    print(f"Student {student} already registered")
         
 def main():
 
@@ -93,6 +96,7 @@ def main():
             Student.reset()
             break
         elif user_input == 5:
+            os.system(f"rm -rf {Student.temporary_folder()}/*")
             print("System shutdown")
             break
         else:
