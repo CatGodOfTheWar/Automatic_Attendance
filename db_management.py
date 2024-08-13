@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 class DBManagement:
 
@@ -12,21 +13,20 @@ class DBManagement:
                 cursor.execute(query, params)
             else:
                 cursor.execute(query)
-            conn.commit()
             if fetch:
                 return cursor.fetchall()
+            conn.commit()
 
     def db_students_init(self):
         table = '''CREATE TABLE IF NOT EXISTS STUDENTS (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Last_Name CHAR(255) NOT NULL,
-                    First_Name CHAR(255) NOT NULL,
-                     Date DATE DEFAULT CURRENT_DATE
+                    Student_name TEXT NOT NULL,
+                    Date TEXT DEFAULT NULL 
                     );'''
         self.db_execute(table)
 
     def db_get_students(self):
-        query = '''SELECT * FROM STUDENTS ORDER BY Last_Name ASC;'''
+        query = '''SELECT * FROM STUDENTS ORDER BY Student_name ASC;'''
         return self.db_execute(query, fetch=True)
 
     def db_delete_students(self, student_id):
@@ -36,25 +36,26 @@ class DBManagement:
 
     def db_check_student(self, name):
         self.name = name
-        query = '''SELECT Last_Name || ' ' || First_Name FROM STUDENTS ORDER BY Last_Name ASC;'''
-        students = self._execute(query, fetch=True)
+        query = '''SELECT Student_name FROM STUDENTS ORDER BY Student_name ASC;'''
+        students = self.db_execute(query, fetch=True)
         return any(student[0] == self.name for student in students)
 
-    def db_add_student(self, first_name, last_name):
-        self.first_name = first_name
-        self.last_name = last_name 
-        query = '''INSERT INTO STUDENTS (Last_Name, First_Name) VALUES (?, ?);'''
-        return self.db_execute(query, (self.last_name, self.first_name))
+    def db_add_student(self, name):
+        date = None
+        query = '''INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?);'''
+        self.db_execute(query, (name, date))
 
-    def db_update_student(self, student_id, first_name, last_name, date = None):
-        self.student_id = student_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.date = date
-        if date:
-            query = '''UPDATE STUDENTS SET Last_Name = ?, First_Name = ?, Date = ? WHERE Id = ?;'''
-            params = (self.last_name, self.first_name, self.date, self.student_id)
-        else:
-            query = '''UPDATE STUDENTS SET Last_Name = ?, First_Name = ? WHERE Id = ?;'''  
-            params = (self.last_name, self.first_name, self.student_id)
+    def db_update_student(self, old_name, new_name):
+        self.old_name = old_name
+        self.new_name = new_name
+        query = '''UPDATE STUDENTS SET Student_name = ? WHERE Student_name = ?;'''
+        params = (self.new_name, self.old_name)
         return self.db_execute(query, params)
+
+    def db_record_attendance(self, student_name):
+        date = datetime.now().strftime("%Y-%m-%d")
+        self.db_execute('INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?)', (student_name, date))
+
+    def db_get_attendance(self):
+        query = '''SELECT Student_name, Date FROM STUDENTS;'''
+        return self.db_execute(query, fetch=True)
