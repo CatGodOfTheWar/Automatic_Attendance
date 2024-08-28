@@ -1,18 +1,19 @@
 import logging
 from time import sleep
 import os
-import pandas # type: ignore
+import pandas as pd
 import sys
-from photo_management import PhotoManagement
-from recognition import Recognition
-from db_management import DBManagement
-from db_admin import DBAdmin
-
 import customtkinter
 import tkinter.font as tkFont
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
+from PIL import Image, ImageTk
+from picamera2 import Picamera2
+import subprocess
+from recognition import Recognition
+from db_management import DBManagement
+from db_admin import DBAdmin
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 customtkinter.set_appearance_mode("system")
@@ -22,7 +23,6 @@ class Student:
 
     def __init__(self, name):
         self.name = name
-        self.photoManagement = PhotoManagement()
         self.recognition = Recognition()
         self.dBManagement = DBManagement()
     
@@ -51,11 +51,11 @@ class Student:
         
     def generate_attendance_report(self, file_path='attendance_report.xlsx'):
         attendance_data = self.dBManagement.db_get_attendance()
-        dataFrame = pandas.DataFrame(attendance_data, columns=['student_name','date'])
-        dataFrame = dataFrame[dataFrame['date'].notna()]
+        dataFrame = pd.DataFrame(attendance_data, columns=['student_name','date'])
+        dataFrame['date'] = dataFrame['date'].fillna("")
         groupData = dataFrame.groupby('student_name').agg({
-            'date': ['count', lambda x: list(x)]
-            }).reset_index()
+            'date': [lambda x: max(0, len(x) - 1), lambda x: list(x)]
+        }).reset_index()
         groupData.columns = ['student_name', 'attendance_count', 'dates']
         groupData.to_excel(file_path, index=False)
         
@@ -79,10 +79,10 @@ class Student:
             return wrapped_text
         
         attendance_data = self.dBManagement.db_get_attendance()
-        dataFrame = pandas.DataFrame(attendance_data, columns=['student_name', 'date'])
-        dataFrame = dataFrame[dataFrame['date'].notna()]
+        dataFrame = pd.DataFrame(attendance_data, columns=['student_name','date'])
+        dataFrame['date'] = dataFrame['date'].fillna("")
         groupData = dataFrame.groupby('student_name').agg({
-            'date': ['count', lambda x: list(x)]
+            'date': [lambda x: max(0, len(x) - 1), lambda x: list(x)]
         }).reset_index()
         groupData.columns = ['student_name', 'attendance_count', 'dates']
         attendance_list = groupData.to_dict(orient='records')
@@ -115,7 +115,9 @@ class App(customtkinter.CTk):
         default_font.configure(family="Roboto", size=12)
         self.option_add("*Font", default_font)
         self.configure(bg="black")
-        
+        self.camera = Picamera2()
+        self.camera.configure(self.camera.create_preview_configuration(main={"size": (640, 480)}))
+        self.camera.start()
         self.student = Student("Student")
         self.dBAdmin = DBAdmin()
         self.dBAdmin.init_admin_db()
@@ -193,7 +195,7 @@ class App(customtkinter.CTk):
                                                 font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
         self.show_student = customtkinter.CTkButton(self.side_frame, text="Student Mode", command=self.show_student_mode, corner_radius=20,
                                                     font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
-        self.generate_report = customtkinter.CTkButton(self.side_frame, text="Generate Report", command=self.student.generate_attendance_report, corner_radius=20,
+        self.generate_report = customtkinter.CTkButton(self.side_frame, text="Generate Report", command=self.generate_report_event, corner_radius=20,
                                                     font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
         self.refresh = customtkinter.CTkButton(self.side_frame, text="Refresh", command=self.refresh_attendance_event, corner_radius=20,
                                                     font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
@@ -233,12 +235,11 @@ class App(customtkinter.CTk):
     def create_attendance_graphic(self):
         primary_color = "#212325"
         color = "#3BA55D"
-        students =   [0] * 15
-        attendance = list(range(1,16))  
+        students = [0] * 16 
+        attendance = list(range(0, 16))  
         db_content = self.student.show_student_db()
-        
         for row in db_content:
-            index = row[1]  - 1
+            index = row[1]  
             if 0 <= index < len(students):
                 students[index] += 1
         plt.style.use('grayscale')
@@ -280,13 +281,127 @@ class App(customtkinter.CTk):
             dates_label.grid(row=row, column=2, padx=5, pady=5)
 
     def show_student_mode(self):
-        self.main_frame.place_forget()  
+        self.main_frame.destroy()  
         self.show_student_frame = customtkinter.CTkFrame(self, corner_radius=20, border_width=2, border_color="#3BA55D")
         self.show_student_frame.place(relx=0.5, rely=0.47, anchor="center")
+        self.show_student_frame.grid_rowconfigure(0, weight=1)
+        self.show_student_frame.grid_columnconfigure(0, weight=1)
+        self.show_student_frame.grid_columnconfigure(1, weight=1)
+
+        self.video_frame = customtkinter.CTkFrame(self.show_student_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.video_frame.grid(row=0, column=0, padx=50, pady=50, sticky="nsew")
+
+        self.buttons_frame = customtkinter.CTkFrame(self.show_student_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.buttons_frame.grid(row=0, column=1, rowspan=2, padx=50, pady=50, sticky="nsew")
+
+        self.student_label = customtkinter.CTkLabel(self.buttons_frame, text="Welcome \n Students!", anchor="center",
+                                                    font=customtkinter.CTkFont(family="Roboto", size=30, weight="normal", slant="italic"))
+        self.add_attendance = customtkinter.CTkButton(self.buttons_frame, text="Add\nAttendance", command=self.add_attendance_event, corner_radius=20, 
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.register_student = customtkinter.CTkButton(self.buttons_frame, text="Register\nStudent", command=self.register_student_event, corner_radius=20,
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.exit = customtkinter.CTkButton(self.buttons_frame, text="Exit", command=self.back_event_student, corner_radius=20, 
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.close = customtkinter.CTkButton(self.buttons_frame, text="Close", command=self.close_window_event, corner_radius=20,
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.add_attendance_label = customtkinter.CTkLabel(self.show_student_frame, text="Select Student:", justify="center", 
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.attendance_entry = customtkinter.CTkEntry(self.show_student_frame, width=int(self.width * 0.25), height=int(self.height * 0.05), placeholder_text="Name",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"), justify="center")
+        all_students = self.student.show_student_db()
+        students = [row[0] for row in all_students]
+        self.student_dropdown = customtkinter.CTkOptionMenu(self.show_student_frame, values=students, anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.add_student_label = customtkinter.CTkLabel(self.show_student_frame, text="Register Student:", justify="center",
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
         
+        
+        self.buttons_frame.grid_rowconfigure(0, weight=1)
+        self.buttons_frame.grid_rowconfigure(1, weight=1)
+        self.buttons_frame.grid_rowconfigure(2, weight=1)
+        self.buttons_frame.grid_rowconfigure(3, weight=1)
+        self.buttons_frame.grid_rowconfigure(4, weight=1)
+        self.buttons_frame.grid_columnconfigure(0, weight=1)
+        self.video_frame.grid_rowconfigure(0, weight=1)
+        self.video_frame.grid_columnconfigure(0, weight=1)
+
+        self.student_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        self.add_attendance.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.register_student.grid(row=2, column=0, padx=15, pady=15, sticky="nsew")
+        self.exit.grid(row=3, column=0, padx=15, pady=15, sticky="nsew")
+        self.close.grid(row=4, column=0, padx=15, pady=15, sticky="nsew")
+        self.add_attendance_label.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.student_dropdown.grid(row=2, column=0, padx=15, pady=(15, 50), sticky="nsew")
+        self.add_student_label.grid(row=3, column=0, padx=15, pady=15, sticky="nsew")
+        self.attendance_entry.grid(row=4, column=0, padx=(50, 15), pady=(15, 50), sticky="nsew")
+
+        self.video_label = customtkinter.CTkLabel(self.video_frame, text="")
+        self.video_label.pack(expand=True, fill="both")
+        self.update_frame()
+            
+    def update_frame(self):
+        frame = self.camera.capture_array()
+        image = Image.fromarray(frame)
+        image = ImageTk.PhotoImage(image)
+        self.video_label.configure(image=image)
+        self.video_label.image = image
+        self.after(1000 // 24, self.update_frame)   
+        
+    def add_attendance_event(self):
+        student_name = self.student_dropdown.get()
+        self.frame = self.camera.capture_array()
+        if self.frame is not None:
+            image = Image.fromarray(self.frame)
+            if image.mode == 'RGBA':
+                image = image.convert('RGB')
+            filename = f"{student_name}.jpg"
+            image.save(filename)
+            subprocess.run(['mv', filename, Student.temporary_folder()])
+            if self.student.recognition.check(f"{Student.images_folder()}/{student_name}.jpg", f"{Student.temporary_folder()}/{student_name}.jpg"):
+                if self.student.dBManagement.db_record_attendance(student_name):
+                    self.show_popup(f"Attendance added for {student_name}.")
+                else:
+                    self.show_popup(f"Attendance already recorded for {student_name}.")
+            else:
+                self.show_popup(f"Student {student_name} not registered.")
+        else:
+            self.show_popup("No frame available to save.")
+        
+    def register_student_event(self):
+        student_name = self.attendance_entry.get()
+        self.frame = self.camera.capture_array()
+        if not self.student.dBManagement.db_check_student(student_name):
+            if self.frame is not None:
+                image = Image.fromarray(self.frame)
+                if image.mode == 'RGBA':
+                    image = image.convert('RGB')
+                filename = f"{student_name}.jpg"
+                image.save(filename)
+                subprocess.run(['mv', filename, Student.images_folder()])
+                self.student.dBManagement.db_add_student(student_name)
+                self.show_popup(f"Student {student_name} registered.")
+            else:
+                self.show_popup("No frame available to save.")
+        else:
+            self.show_popup(f"Student {student_name} already registered.")
+            
+    def show_popup(self, message):
+        popup = tk.Toplevel()
+        popup.title("Notification")
+        popup.geometry("750x300")
+        popup.configure(bg="#696880")
+        popup.update_idletasks()
+        width = popup.winfo_width()
+        height = popup.winfo_height()
+        x = (popup.winfo_screenwidth() // 2) - (width // 2)
+        y = (popup.winfo_screenheight() // 2) - (height // 2)
+        popup.geometry(f'{width}x{height}+{x}+{y}')
+        label = customtkinter.CTkLabel(popup, text=message, bg_color="#696880", text_color="white", font=("Roboto", 25, "bold"))
+        label.pack(expand=True, padx=20, pady=20)
+        popup.after(5000, popup.destroy)
     
     def show_advanced_settings(self):
-        self.main_frame.place_forget()
+        self.main_frame.destroy()
         self.show_advanced_frame = customtkinter.CTkFrame(self, corner_radius=20, border_width=2, border_color="#3BA55D")
         self.show_advanced_frame.place(relx=0.5, rely=0.47, anchor="center")
     
@@ -294,11 +409,16 @@ class App(customtkinter.CTk):
         pass
     
     def refresh_attendance_event(self):
-        self.canvas.get_tk_widget().grid_forget()
-        self.table_frame.grid_forget()
+        self.canvas.get_tk_widget().destroy()
+        self.table_frame.destroy()
         self.create_attendance_graphic()
         self.create_attendance_table()
+        self.show_popup("Attendance refreshed.")
 
+    def generate_report_event(self):
+        self.student.generate_attendance_report()
+        self.show_popup("Attendance report generated.")
+    
     def register_event(self):
         username = self.reg_username_entry.get()
         password = self.reg_password_entry.get()
@@ -310,7 +430,7 @@ class App(customtkinter.CTk):
             else:
                 self.dBAdmin.db_add_admin(username, password)
                 print("Registration successful - username:", username)
-                self.registration_frame.place_forget()
+                self.registration_frame.destroy()
                 self.show_login_frame()
         else:
             print("Registration failed - username or password missing")
@@ -325,7 +445,7 @@ class App(customtkinter.CTk):
             print("Login successful - username:", username)
             print("Remember Me:", remember_me)
             self.error_label.configure(text="")
-            self.login_frame.place_forget()
+            self.login_frame.destroy()
             self.show_main_frame()
             self.admin_label.configure(text=f"Welcome\n {username}!")
         else:
@@ -333,7 +453,13 @@ class App(customtkinter.CTk):
             self.error_label.configure(text="Invalid username or password")
 
     def back_event(self):
-        self.main_frame.place_forget()
+        self.main_frame.destroy()
+        self.show_login_frame()
+        plt.close(self.fig)
+        
+    def back_event_student(self):
+        self.show_student_frame.destroy()
+        plt.close(self.fig)
         self.show_login_frame()
 
     def close_window_event(self):

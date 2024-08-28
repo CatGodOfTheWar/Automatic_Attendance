@@ -52,9 +52,9 @@ class DBManagement:
         check = self.db_execute('SELECT COUNT(*) FROM STUDENTS WHERE student_name = ? AND date = ?', (student_name, date), fetch=True)
         if not check[0][0]:
             self.db_execute('INSERT INTO STUDENTS (Student_name, Date) VALUES (?, ?)', (student_name, date))
-            print(f"Attendance recorded for student {student_name} on {date}.")
+            return True
         else:
-            print("Attendance already recorded")
+            return False
         
     def db_get_attendance(self):
         return self.db_execute('SELECT Student_name, Date FROM STUDENTS', fetch=True)
