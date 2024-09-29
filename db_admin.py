@@ -44,3 +44,8 @@ class DBAdmin:
         result = self.db_execute('SELECT COUNT(*) FROM admin', fetch=True)
         count = result[0][0] if result else 0
         return count > 0
+    
+    def list_admins(self):
+        result = self.db_execute('SELECT username FROM admin', fetch=True)
+        admin_names = [row[0] for row in result]
+        return admin_names

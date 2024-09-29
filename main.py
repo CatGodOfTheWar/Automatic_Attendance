@@ -380,6 +380,7 @@ class App(customtkinter.CTk):
                 subprocess.run(['mv', filename, Student.images_folder()])
                 self.student.dBManagement.db_add_student(student_name)
                 self.show_popup(f"Student {student_name} registered.")
+                self.student_dropdown.configure(values=[student[0] for student in self.student.show_student_db()])
             else:
                 self.show_popup("No frame available to save.")
         else:
@@ -401,9 +402,170 @@ class App(customtkinter.CTk):
         popup.after(5000, popup.destroy)
     
     def show_advanced_settings(self):
+        
+
+        # Main frame setup
         self.main_frame.destroy()
         self.show_advanced_frame = customtkinter.CTkFrame(self, corner_radius=20, border_width=2, border_color="#3BA55D")
         self.show_advanced_frame.place(relx=0.5, rely=0.47, anchor="center")
+        
+        # Configure the grid weights for the show_advanced_frame
+        self.show_advanced_frame.grid_rowconfigure(0, weight=1)
+        self.show_advanced_frame.grid_rowconfigure(1, weight=1)
+        self.show_advanced_frame.grid_rowconfigure(2, weight=1)
+        self.show_advanced_frame.grid_rowconfigure(3, weight=1)
+        self.show_advanced_frame.grid_columnconfigure(0, weight=1)
+        self.show_advanced_frame.grid_columnconfigure(1, weight=1)
+
+        # Frames inside show_advanced_frame
+        self.name_frame = customtkinter.CTkFrame(self.show_advanced_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.name_frame.grid(row=0, column=0, padx=50, pady=(50, 30), sticky="nsew")
+        self.admin_add_frame = customtkinter.CTkFrame(self.show_advanced_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.admin_add_frame.grid(row=1, column=0, padx=50, pady=30, sticky="nsew")
+        self.admin_select_frame = customtkinter.CTkFrame(self.show_advanced_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.admin_select_frame.grid(row=2, column=0, padx=50, pady=30, sticky="nsew")
+        self.delete_frame = customtkinter.CTkFrame(self.show_advanced_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.delete_frame.grid(row=3, column=0, padx=50, pady=(30, 50), sticky="nsew")
+        self.advanced_admin_frame = customtkinter.CTkFrame(self.show_advanced_frame, corner_radius=20, border_width=2, border_color="#3BA55D")
+        self.advanced_admin_frame.grid(row=0, column=1, rowspan=4, padx=(0, 50), pady=50, sticky="nsew")
+
+        # Configure the grid weights for the inner frames
+        for frame in [self.name_frame, self.admin_add_frame, self.admin_select_frame, self.delete_frame]:
+            frame.grid_rowconfigure(0, weight=1)
+            frame.grid_rowconfigure(1, weight=1)
+            frame.grid_columnconfigure(0, weight=1)
+            frame.grid_columnconfigure(1, weight=1)
+
+        # Labels and dropdowns inside name_frame
+        self.student_name_label = customtkinter.CTkLabel(self.name_frame, text="Student Name:", anchor="center",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.student_name_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        self.student_dropdown = customtkinter.CTkOptionMenu(self.name_frame, values=[student[0] for student in self.student.show_student_db()], anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.student_dropdown.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
+        self.new_student_name_label = customtkinter.CTkLabel(self.name_frame, text="New Student Name:", anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.new_student_name_label.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.new_student_name_entry = customtkinter.CTkEntry(self.name_frame, width=int(self.width * 0.25), height=int(self.height * 0.05), placeholder_text="Name",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"), justify="center")
+        self.new_student_name_entry.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
+
+        # Labels and entries inside admin_add_frame
+        self.add_admin_name_label = customtkinter.CTkLabel(self.admin_add_frame, text="Admin Name:", anchor="center",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.add_admin_name_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        self.add_admin_name_entry = customtkinter.CTkEntry(self.admin_add_frame, width=int(self.width * 0.25), height=int(self.height * 0.05), placeholder_text="Name",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"), justify="center")
+        self.add_admin_name_entry.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
+        self.add_admin_password_label = customtkinter.CTkLabel(self.admin_add_frame, text="Admin Password:", anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.add_admin_password_label.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.add_admin_password_entry = customtkinter.CTkEntry(self.admin_add_frame, width=int(self.width * 0.25), height=int(self.height * 0.05), show="*", placeholder_text="Password",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"), justify="center")
+        self.add_admin_password_entry.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
+
+        # Labels and dropdowns inside admin_select_frame
+        self.select_admin_name_label = customtkinter.CTkLabel(self.admin_select_frame, text="Admin Name:", anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.select_admin_name_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        self.admin_dropdown = customtkinter.CTkOptionMenu(self.admin_select_frame, values=self.dBAdmin.list_admins(), anchor="center",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.admin_dropdown.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
+        self.add_new_password_label = customtkinter.CTkLabel(self.admin_select_frame, text="New Password:", anchor="center",
+                                                            font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.add_new_password_label.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.password_entry = customtkinter.CTkEntry(self.admin_select_frame, width=int(self.width * 0.25), height=int(self.height * 0.05), show="*", placeholder_text="Password",
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"), justify="center")
+        self.password_entry.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
+
+        # Labels and dropdowns inside delete_frame
+        self.delete_admin_label = customtkinter.CTkLabel(self.delete_frame, text="Select Admin:", anchor="center",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.delete_admin_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        self.delete_admin_dropdown = customtkinter.CTkOptionMenu(self.delete_frame, values=self.dBAdmin.list_admins(), anchor="center",
+                                                                font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.delete_admin_dropdown.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
+        self.delete_student_label = customtkinter.CTkLabel(self.delete_frame, text="Select Student:", anchor="center",
+                                                        font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.delete_student_label.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+        self.delete_student_dropdown = customtkinter.CTkOptionMenu(self.delete_frame, values=[student[0] for student in self.student.show_student_db()], anchor="center",
+                                                                font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.delete_student_dropdown.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
+        admin_name = self.dBAdmin.list_admins()[0]  # Assuming you want the first admin name
+
+        
+        self.advanced_admin_frame.grid_rowconfigure(0, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(1, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(2, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(3, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(4, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(5, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(6, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(7, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(8, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(9, weight=1)
+        self.advanced_admin_frame.grid_rowconfigure(10, weight=1)
+        self.advanced_admin_frame.grid_columnconfigure(0, weight=1)
+
+        # Welcome label
+        self.welcome_label = customtkinter.CTkLabel(self.advanced_admin_frame, text=f"Welcome {admin_name}", anchor="center",
+                                                    font=customtkinter.CTkFont(family="Roboto", size=25, weight="normal", slant="italic"))
+        self.welcome_label.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+
+        # Buttons
+        self.reset_all_data_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Reset All\nData", command=self.reset_all_data_event)
+        self.reset_all_data_button.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
+
+        self.reset_admin_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Reset\n Admin", command=self.reset_admin_event)
+        self.reset_admin_button.grid(row=2, column=0, padx=15, pady=15, sticky="nsew")
+
+        self.reset_student_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Reset\n Students", command=self.reset_student_event)
+        self.reset_student_button.grid(row=3, column=0, padx=15, pady=15, sticky="nsew")
+
+        self.replace_name_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Replace \nStudent Name", command=self.replace_name_event)
+        self.replace_name_button.grid(row=4, column=0, padx=15, pady=15, sticky="nsew")
+
+        self.add_multiple_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Add Multiple\nStudents", command=self.add_multiple_event)
+        self.add_multiple_button.grid(row=5, column=0, padx=15, pady=15, sticky="nsew")
+        
+        self.add_admin = customtkinter.CTkButton(self.advanced_admin_frame, text="Add\nAdmin", command=self.add_admin_event)
+        self.add_admin.grid(row=8, column=0, padx=15, pady=15, sticky="nsew")
+        
+        self.delete_student_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Delete\nStudent", command=self.delete_student_event)
+        self.delete_student_button.grid(row=6, column=0, padx=15, pady=15, sticky="nsew")
+        
+        self.delete_admin_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Delete\nAdmin", command=self.delete_admin_event)
+        self.delete_admin_button.grid(row=7, column=0, padx=15, pady=15, sticky="nsew")
+        
+        self.back_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Back", command=self.back_event)
+        self.back_button.grid(row=9, column=0, padx=15, pady=15, sticky="nsew")
+        
+        self.exit_button = customtkinter.CTkButton(self.advanced_admin_frame, text="Exit", command=self.close_window_event)
+        self.exit_button.grid(row=10, column=0, padx=15, pady=15, sticky="nsew")
+            
+    def reset_all_data_event(self):
+        pass
+    
+    def reset_admin_event(self):
+        pass
+    
+    def reset_student_event(self):
+        pass
+    
+    def replace_name_event(self):
+        pass
+    
+    def add_multiple_event(self):
+        pass
+    
+    def add_admin_event(self):
+        pass
+    
+    def delete_student_event(self):
+        pass
+    
+    def delete_admin_event(self):
+        pass
     
     def web_view(self):
         pass
@@ -454,6 +616,7 @@ class App(customtkinter.CTk):
 
     def back_event(self):
         self.main_frame.destroy()
+        self.show_advanced_frame.destroy()
         self.show_login_frame()
         plt.close(self.fig)
         
