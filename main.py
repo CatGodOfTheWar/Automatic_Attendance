@@ -27,13 +27,10 @@ class Student:
 if __name__ == "__main__":
     app = QApplication(sys.argv)  # Initialize the QApplication
     person_1 = face_recognition.load_image_file(f"{PHOTO_FILE_PATH}/Andrei.jpg")
-    person_2 = face_recognition.load_image_file(f"{PHOTO_FILE_PATH}/Ionut.jpg")
-    person_3 = face_recognition.load_image_file(f"{PHOTO_FILE_PATH}/Cosmin.jpg")
-    known_face_encodings = [face_recognition.face_encodings(person_1, model='small')[0], 
-                            face_recognition.face_encodings(person_2, model='small')[0],
-                            face_recognition.face_encodings(person_3, model='small')[0]]
-    know_face_names = ["Andrei", "Ionut", "Cosmin"]
+    known_face_encodings = [face_recognition.face_encodings(person_1, model='small')[0]]
+    know_face_names = ["Andrei"]
     student1 = Student(known_face_encodings, know_face_names, MODEL_PATH, MODEL_BIN)
     #student1.recognition.recognize_faces()
     student1.login_page.show()
     sys.exit(app.exec()) 
+    

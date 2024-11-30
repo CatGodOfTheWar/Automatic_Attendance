@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QSpacerItem, QSizePolicy
 )
 import logging
+from db_amin import DBAdmin
 
 # Define constants for file paths
 STYLE_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/style.qss"
@@ -18,6 +19,9 @@ class LoginPage(QWidget):
     def __init__(self):
         super().__init__()
         self.login_page()
+        self.db_admin = DBAdmin()
+        self.db_admin.db_connect()
+        self.db_admin.init_admin_db()   
 
     def login_page(self):
         try:
@@ -103,10 +107,19 @@ class LoginPage(QWidget):
             logging.error(f"Error: {e}")
             sys.exit(1)
     def login(self):
-        print("Login button clicked")
+        username = self.username_input.text()
+        password = self.password_input.text()
+        if self.db_admin.db_admin_exists():
+            if self.db_admin.db_check_admin(username, password):
+                print("Login successful")
+            else:
+                print("Invalid credentials")
 
     def register(self):
         print("Register button clicked")
+        username = self.username_input.text()
+        password = self.password_input.text()
+        self.db_admin.db_add_admin(username, password)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
