@@ -9,8 +9,11 @@ from PyQt6.QtWidgets import (
 import logging
 from db_amin import DBAdmin
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 # Define constants for file paths
-STYLE_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/style.qss"
+STYLE_PATH_LOGIN = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/style.qss"
+STYLE_PATH_ADMIN = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/style_admin.qss"
 ICON_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/cat-2.png"
 USERNAME_ICON_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/username.png"
 PASSWORD_ICON_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Python_Versiunea_Noua/password.png"
@@ -18,36 +21,60 @@ PASSWORD_ICON_PATH = "/home/catwarrior/Documents/Python/Teste/Proiect_Final_Pyth
 class LoginPage(QWidget):
     def __init__(self):
         super().__init__()
-        self.login_page()
+        super().__init__()
+        self.main_layout = QVBoxLayout()  
+        self.setLayout(self.main_layout)  
         self.db_admin = DBAdmin()
         self.db_admin.db_connect()
         self.db_admin.init_admin_db()   
+        self.login_page()  
 
     def login_page(self):
         try:
             self.setWindowTitle("Attendance System")
-            self.setFixedSize(600, 800)
-            self.setStyleSheet(open(STYLE_PATH, "r").read())
-            main_layout = QVBoxLayout()
-            main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            main_layout.setContentsMargins(100, 0, 100, 0)
+            self.setFixedSize(600, 800) 
+            self.setStyleSheet(open(STYLE_PATH_LOGIN, "r").read())
+            self.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.main_layout.setContentsMargins(100, 0, 100, 0)
+            self.clear_layout(self.main_layout)
 
-            self.add_icon(main_layout, ICON_PATH, 250)
-            self.add_spacer(main_layout, 100)
+            self.add_icon(self.main_layout, ICON_PATH, 250)
+            self.add_spacer(self.main_layout, 100)
 
-            self.username_input = self.create_input_field(main_layout, USERNAME_ICON_PATH, "Username")
-            self.password_input = self.create_input_field(main_layout, PASSWORD_ICON_PATH, "Password", is_password=True)
+            self.username_input = self.create_input_field(self.main_layout, USERNAME_ICON_PATH, "Username")
+            self.password_input = self.create_input_field(self.main_layout, PASSWORD_ICON_PATH, "Password", is_password=True)
 
-            self.add_spacer(main_layout, 30)
-            self.create_button(main_layout, "Log In", self.login, "loginButton")
-            self.add_spacer(main_layout, 15)
-            self.create_button(main_layout, "Sign Up", self.register, "registerButton")
-            
-            self.setLayout(main_layout)
+            self.add_spacer(self.main_layout, 30)
+            self.create_button(self.main_layout, "Log In", self.login, "loginButton")
+            self.add_spacer(self.main_layout, 15)
+            self.create_button(self.main_layout, "Sign Up", self.register, "registerButton")
+
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-        
+
+    def admin_page(self):
+        try:
+            self.setWindowTitle("Admin Dashboard")
+            self.setFixedSize(600, 800) 
+            self.setStyleSheet(open(STYLE_PATH_ADMIN, "r").read())
+
+            self.clear_layout(self.main_layout)
+
+            self.add_icon(self.main_layout, ICON_PATH, 250)
+
+            label = QLabel("Welcome to the Admin Dashboard")
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.main_layout.addWidget(label)
+
+            logout_button = QPushButton("Log Out")
+            logout_button.setFixedHeight(50)
+            logout_button.clicked.connect(self.logout)
+            self.main_layout.addWidget(logout_button)
+
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            sys.exit(1)
 
     def add_icon(self, layout, path, size, alignment=Qt.AlignmentFlag.AlignCenter):
         try:
@@ -106,12 +133,15 @@ class LoginPage(QWidget):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
+            
+            
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
         if self.db_admin.db_admin_exists():
             if self.db_admin.db_check_admin(username, password):
-                print("Login successful")
+                self.clear_layout(self.layout())  
+                self.admin_page() 
             else:
                 print("Invalid credentials")
 
@@ -120,6 +150,22 @@ class LoginPage(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         self.db_admin.db_add_admin(username, password)
+        
+    def clear_layout(self, layout):
+        if layout is not None:
+            while layout.count():
+                child = layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater() 
+                elif child.layout():
+                    self.clear_layout(child.layout()) 
+    
+    def logout(self):
+        self.clear_layout(self.layout())
+        self.login_page()  
+
+           
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
