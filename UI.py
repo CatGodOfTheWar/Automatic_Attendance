@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QSpacerItem, QSizePolicy
 )
 import logging
-from db_amin import DBAdmin
+from Proiect_Final_Python_Versiunea_Noua.DB_admin import DBAdmin
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
