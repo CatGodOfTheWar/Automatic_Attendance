@@ -391,6 +391,8 @@ class MainApp(MainLayoutCore):
     
     def add_student_picture(self):
         try:
+            if not os.path.exists(PHOTO_FILE_PATH):
+                os.makedirs(PHOTO_FILE_PATH, exist_ok=True)
             images_paths = self.selection_window("Images (*.png *.xpm *.jpg *.jpeg);;All Files (*)", "Select Photos")
             print(images_paths)
             for img in images_paths:
