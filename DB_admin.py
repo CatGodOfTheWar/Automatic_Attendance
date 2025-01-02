@@ -1,12 +1,15 @@
 import bcrypt
 import sqlite3
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 class DBAdmin:
     def db_connect(self):
         try:
             return sqlite3.connect('admin.db')
         except sqlite3.Error as e:
-            print(f"Error connecting to database: {e}")
+            logging.error(f"Error connecting to database: {e}")
             return None
         
     def db_execute(self, query, params=None, fetch=False):
@@ -21,7 +24,7 @@ class DBAdmin:
                 return cursor.fetchall()
             conn.commit()
         except sqlite3.Error as e:
-            print(f"Error executing query: {e}")
+            logging.error(f"Error executing query: {e}")
             return None
 
     def init_admin_db(self):
@@ -32,7 +35,7 @@ class DBAdmin:
                 password VARCHAR(255) NOT NULL);'''
             self.db_execute(table)
         except sqlite3.Error as e:
-            print(f"Error creating table: {e}")
+            logging.error(f"Error creating table: {e}")
             return None
 
     def db_add_admin(self, username, password):
@@ -40,7 +43,7 @@ class DBAdmin:
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             self.db_execute('INSERT INTO admin (username, password) VALUES (?, ?)', (username, hashed_password))
         except sqlite3.Error as e:
-            print(f"Error adding admin: {e}")
+            logging.error(f"Error adding admin: {e}")
             return None
         
     def db_delete_admin(self, username):
@@ -48,7 +51,7 @@ class DBAdmin:
             self.username = username
             return self.db_execute('DELETE FROM admin WHERE username = ?', (self.username,))
         except sqlite3.Error as e:
-            print(f"Error deleting admin: {e}")
+            logging.error(f"Error deleting admin: {e}")
             return None
 
     def db_check_admin(self, username, password):
@@ -62,10 +65,10 @@ class DBAdmin:
                     if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
                         return True
                 except ValueError as e:
-                    print(f"Error: {e}") 
+                    logging.error(f"Error: {e}") 
             return False
         except sqlite3.Error as e:
-            print(f"Error checking admin: {e}")
+            logging.error(f"Error checking admin: {e}")
             return False
 
     def db_admin_exists(self):
@@ -74,7 +77,7 @@ class DBAdmin:
             count = result[0][0] if result else 0
             return count > 0
         except sqlite3.Error as e:
-            print(f"Error checking admin: {e}")
+            logging.error(f"Error checking admin: {e}")
             return False
     
     def list_admins(self):
@@ -83,7 +86,7 @@ class DBAdmin:
             admin_names = [row[0] for row in result]
             return admin_names
         except sqlite3.Error as e:
-            print(f"Error listing admins: {e}")
+            logging.error(f"Error listing admins: {e}")
             return None
     
     def db_update_admin_password(self, username, password):
@@ -91,5 +94,5 @@ class DBAdmin:
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             self.db_execute('UPDATE admin SET password = ? WHERE username = ?', (hashed_password, username))
         except sqlite3.Error as e:
-            print(f"Error updating admin password: {e}")
+            logging.error(f"Error updating admin password: {e}")
             return None

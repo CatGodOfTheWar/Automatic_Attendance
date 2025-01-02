@@ -3,42 +3,42 @@ import numpy as np
 from openvino.runtime import Core
 import face_recognition
 import logging
+from PyQt6.QtCore import QThread, pyqtSignal
+from DB_management import DBmanagement
 
-# Set logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-class FaceRecognition:
+class FaceRecognitionThread(QThread):
+    frame_signal = pyqtSignal(np.ndarray)
+    attendance_signal = pyqtSignal(str, str)
+
     def __init__(self, known_face_encodings, known_face_names, model_path, model_bin):
-        if len(known_face_encodings) != len(known_face_names):
-            logging.error("Error: The number of face encodings and names do not match.")
-            exit()
-        if len(known_face_encodings) == 0:
-            logging.error("Error: No face encodings provided.")
-            exit()
-        if len(known_face_names) == 0:
-            logging.error("Error: No names provided.")
-            exit()
-        if not model_path:
-            logging.error("Error: No model path provided.")
-            exit()
-        if not model_bin:
-            logging.error("Error: No model binary path provided.")
-            exit()
-        self.model_bin = model_bin
-        self.model_path = model_path
-        self.known_face_encodings = known_face_encodings
-        self.known_face_names = known_face_names
-        self.cap = self.initialize_webcam()
-        self.compiled_model = self.initialize_model(self.model_path, self.model_bin)
-        self.input_blob, self.output_blob = self.extract_input_output_blobs(self.compiled_model)
-        
+        try:
+            super().__init__()
+            self.known_face_encodings = known_face_encodings
+            self.known_face_names = known_face_names
+            self.model_path = model_path
+            self.model_bin = model_bin
+            self.cap = self.initialize_webcam()
+            self.compiled_model = self.initialize_model(self.model_path, self.model_bin)
+            self.input_blob, self.output_blob = self.extract_input_output_blobs(self.compiled_model)
+            self.running = True  
+            self.db = DBmanagement()
+        except Exception as e:
+            logging.error(f"Error initializing FaceRecognitionThread: {e}")
+            exit(1)
+
     def initialize_webcam(self):
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            logging.error("Error: Could not open webcam.")
-            exit()
-        return cap
-    
+        try:
+            cap = cv2.VideoCapture(0)
+            if not cap.isOpened():
+                logging.error("Error: Could not open webcam.")
+                exit(1)
+            return cap
+        except Exception as e:
+            logging.error(f"Error initializing webcam: {e}")
+            exit(1)
+
     def initialize_model(self, model_path, model_bin):
         self.model_path = model_path
         self.model_bin = model_bin
@@ -49,24 +49,28 @@ class FaceRecognition:
             logging.info("OpenVINO model loaded and compiled.")
         except Exception as e:
             logging.error(f"Error initializing OpenVINO: {e}")
-            exit()
+            exit(1)
         return compiled_model
-        
+
     def extract_input_output_blobs(self, compiled_model):
-        input_blob = compiled_model.input(0).any_name
-        output_blob = compiled_model.output(0).any_name
-        return input_blob, output_blob
-        
-    def recognize_faces(self):
+        try:
+            input_blob = compiled_model.input(0).any_name
+            output_blob = compiled_model.output(0).any_name
+            return input_blob, output_blob
+        except Exception as e:
+            logging.error(f"Error extracting input/output blobs: {e}")
+            exit(1)
+
+    def run(self):
         skip_frames = 2 
         frame_counter = 0
         try:
-            while True:
+            while self.running:
                 ret, frame = self.cap.read()
                 if not ret:
                     logging.warning("Error: Could not read frame.")
                     break
-                
+
                 # Skip frames based on the counter
                 frame_counter += 1
                 if frame_counter % (skip_frames + 1) != 0:
@@ -110,14 +114,19 @@ class FaceRecognition:
                         if True in matches:
                             first_match_index = matches.index(True)
                             name = self.known_face_names[first_match_index]
+                            if self.db.db_record_attendance(name):
+                                logging.info(f"Attendance recorded for {name}")
+                                self.attendance_signal.emit(name, "recorded")
+                            else:
+                                logging.info(f"Attendance already recorded for {name} today")
+                                self.attendance_signal.emit(name, "already recorded")
                         
                         # Annotate the frame
                         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
                         cv2.putText(frame, name, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-                cv2.imshow('Video', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                # Emit the frame
+                self.frame_signal.emit(frame)
         except Exception as e:
             logging.error(f"An error occurred during execution: {e}")
 
@@ -125,3 +134,6 @@ class FaceRecognition:
             self.cap.release()
             cv2.destroyAllWindows()
             logging.info("Resources released, application closed.")
+            
+    def stop(self):
+        self.running = False

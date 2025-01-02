@@ -1,0 +1,34 @@
+/* 
+#primary-color: #394454
+#secondary-color: #6FDA9C
+#text-color-heighlighted: #698F9F
+*/
+
+QWidget {
+    background-color: #394454;
+}
+
+#titleLabel {
+    color: #6FDA9C;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#LogoutButton {
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+#LogoutButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#videoLabel {
+    border-radius: 10%;
+    border: 3px solid #6FDA9C;  /* Optional: Add a border for better visibility */
+}
