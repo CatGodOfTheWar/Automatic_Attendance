@@ -1,0 +1,331 @@
+/* 
+#primary-color: #394454
+#secondary-color: #6FDA9C
+#text-color-heighlighted: #698F9F
+*/
+
+QWidget {
+    background-color: #394454;
+}
+
+#hLayoutName{
+    background-color: none;
+}
+
+#nameLabel{
+    color: #6FDA9C;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#hLayoutAddStudent{
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#addStudentButton{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#studentModeButton {
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#addStudentButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#studentModeButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#hLayoutDeleteStudent {
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#deleteStudentButton {
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#deleteStudentButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+QComboBox::drop-down {
+    border: 0px;
+}
+
+#dropdownMenu {
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    padding: 15px;
+    text-align: center; 
+}
+
+#dropdownMenu:hover {
+    background-color: #394454;
+}
+
+#hLayoutReplaceStudentName{
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#replaceNameStudentButton {
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#replaceNameStudentButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#vLayoutReplaceStudentName{
+    background-color: #698F9F;
+}
+
+#inputLabelReplace{
+    font-size: 16px;       
+    height: 50px;          
+    background-color: #394454; 
+    border-radius: 10%;  
+    padding: 5px;    
+    color: white; 
+    border: 2px solid #6FDA9C; 
+}
+
+#inputLabelReplace:hover {
+    border-color: white; 
+}
+
+#dropdownMenuReplace{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    padding: 15px;
+    text-align: center; 
+}
+
+#dropdownMenuReplace:hover {
+    background-color: #394454;
+}
+
+#hLayoutData{
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#vLayoutData {
+    background-color: #698F9F;
+} 
+
+#dataButton{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#dataButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#dropdownMenuData{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    padding: 15px;
+    text-align: center; 
+}
+
+#dropdownMenuData:hover {
+    background-color: #394454;
+}
+
+#inputLabelData{
+    font-size: 16px;       
+    height: 50px;          
+    background-color: #394454; 
+    border-radius: 10%;  
+    padding: 5px;    
+    color: white; 
+    border: 2px solid #6FDA9C; 
+}
+
+#inputLabelData:hover {
+    border-color: white; 
+}
+
+#webServerButton{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#webServerButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#hLayoutWebServer{
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#hLayoutLogout{
+    background-color: #698F9F;
+    border-radius: 10px;
+}
+
+#logoutButton{
+    background-color: #6FDA9C;
+    border-radius: 10%;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#logoutButton:hover {
+    background-color: #394454;
+    border: 2px solid #6FDA9C;
+}
+
+#registerPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#raportPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#deletePop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#addPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#studentLoad {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#replacePop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#dataPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#serverPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#complaintPop {
+    color: white;
+    font-size: 21px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#loadPop {
+    color: white;
+    font-size: 18px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
+
+#attendanceStatus {
+    color: white;
+    font-size: 18px;
+    border-radius: 10%;
+    padding: 15px;
+    background-color: #698F9F;
+    text-align: center; 
+    margin: 15px;
+}
