@@ -6,9 +6,16 @@ import logging
 from PyQt6.QtCore import QThread, pyqtSignal
 from DB_management import DBmanagement
 
+# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+"""
+    This class handles face recognition using a separate thread.
+    It captures video frames from the webcam, processes them to recognize faces,
+    and emits signals with the frame and recognized attendance information.
+    """
 class FaceRecognitionThread(QThread):
+    # Define signals for frame and attendance
     frame_signal = pyqtSignal(np.ndarray)
     attendance_signal = pyqtSignal(str, str)
 
@@ -127,6 +134,7 @@ class FaceRecognitionThread(QThread):
 
                 # Emit the frame
                 self.frame_signal.emit(frame)
+                
         except Exception as e:
             logging.error(f"An error occurred during execution: {e}")
 
@@ -134,6 +142,7 @@ class FaceRecognitionThread(QThread):
             self.cap.release()
             cv2.destroyAllWindows()
             logging.info("Resources released, application closed.")
-            
+
     def stop(self):
         self.running = False
+        self.wait()

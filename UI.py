@@ -20,8 +20,10 @@ from DB_admin import DBAdmin
 from DB_management import DBmanagement
 from recognition import FaceRecognitionThread
 
+# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+# Define constants for file paths and other configurations
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STYLE_PATH_LOGIN = os.path.join(BASE_DIR, "style_sheets", "style.qss")
 STYLE_PATH_ADMIN = os.path.join(BASE_DIR, "style_sheets", "style_admin.qss")
@@ -34,7 +36,14 @@ MODEL_PATH = os.path.join(BASE_DIR, "intel", "face-detection-adas-0001", "FP16",
 MODEL_BIN = os.path.join(BASE_DIR, "intel", "face-detection-adas-0001", "FP16", "face-detection-adas-0001.bin")
 PHOTO_FILE_PATH = os.path.join(BASE_DIR, "imgs")
 
+"""
+    MainLayoutCore is a base class that provides various utility methods 
+    for creating and managing UI components such as buttons, labels, 
+    input fields, icons, dropdowns, and layouts. It also includes methods 
+    for clearing layouts and handling file selection dialogs.
+"""
 class MainLayoutCore(QWidget):
+# Method to create a button and add it to the layout
     def create_button(self, layout, text, callback, alignment=Qt.AlignmentFlag.AlignCenter, object_name=None, height=60, width=400):
         try:
             button_layout = QHBoxLayout()
@@ -50,6 +59,7 @@ class MainLayoutCore(QWidget):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+# Method to create a label and add it to the layout
     def create_label(self, layout, text, alignment=Qt.AlignmentFlag.AlignCenter, object_name=None):
         try:
             label = QLabel(text)
@@ -61,6 +71,7 @@ class MainLayoutCore(QWidget):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+# Method to create an input field and add it to the layout
     def create_input_field(self, layout, icon_path, placeholder, has_icon=False, is_password=False, object_name=None, height=50, width=200):
         try:
             input_layout = QHBoxLayout()
@@ -82,7 +93,8 @@ class MainLayoutCore(QWidget):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-                
+    
+# Method to add an icon to the layout           
     def add_icon(self, layout, path, size, alignment=any, object_name=None):
         try:
             icon_label = QLabel()
@@ -98,6 +110,7 @@ class MainLayoutCore(QWidget):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+# Method to create a dropdown and add it to the layout
     def create_dropdown(self, layout, items, width=None, height=None, alignment=Qt.AlignmentFlag.AlignCenter, object_name=None):
         dropdown = QComboBox()
         dropdown.addItems(items)
@@ -108,6 +121,7 @@ class MainLayoutCore(QWidget):
         layout.addWidget(dropdown, alignment=alignment)
         return dropdown
 
+# Method to add a spacer to the layout
     def add_spacer(self, layout, height):
         try:
             spacer = QSpacerItem(0, height, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
@@ -115,7 +129,8 @@ class MainLayoutCore(QWidget):
         except Exception as e: 
             logging.error(f"Error: {e}")
             sys.exit(1)
-            
+     
+# Method to set a horizontal layout and add it to the parent layout            
     def set_h_layout(self, layout, alignment=Qt.AlignmentFlag.AlignCenter, object_name=None):
         h_layout = QHBoxLayout()
         widget = QWidget()
@@ -125,6 +140,7 @@ class MainLayoutCore(QWidget):
         layout.addWidget(widget)
         return h_layout
     
+# Method to set a vertical layout and add it to the parent layout    
     def set_v_layout(self, layout, alignment=Qt.AlignmentFlag.AlignCenter, object_name=None):
         v_layout = QVBoxLayout()
         widget = QWidget()
@@ -134,6 +150,7 @@ class MainLayoutCore(QWidget):
         layout.addWidget(widget)
         return v_layout
     
+# Method to clear all widgets from a layout    
     def clear_layout(self, layout):
         if layout is not None:
             while layout.count():
@@ -142,13 +159,18 @@ class MainLayoutCore(QWidget):
                     child.widget().deleteLater() 
                 elif child.layout():
                     self.clear_layout(child.layout()) 
-                    
+   
+# Method to open a file selection dialog and return selected file paths                    
     def selection_window(self, file_type="Images (*.png *.xpm *.jpg *.jpeg);;All Files (*)" , window_title="Select Photos"):
         options = QFileDialog.Option.DontUseNativeDialog
         file_paths, _ = QFileDialog.getOpenFileNames(self, window_title, "", file_type, options=options)
         if file_paths:
             return file_paths
 
+"""
+    PopUpWindow is a class that creates a pop-up dialog window for displaying messages.
+    It inherits from QDialog and MainLayoutCore to utilize their functionalities.
+"""
 class PopUpWindow(QDialog, MainLayoutCore):
     def __init__(self):
         try:
@@ -159,7 +181,7 @@ class PopUpWindow(QDialog, MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
         
-        
+    # Method to display an alert window with a message    
     def alertWindow(self, message = "Alert Window", object_name = None, height=300, width=200):
         try:
             self.message = message
@@ -178,6 +200,11 @@ class PopUpWindow(QDialog, MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+"""
+    MainApp is the main application class that initializes the UI and handles 
+    the login, admin, and student pages. It inherits from MainLayoutCore to 
+    utilize its UI component creation methods.
+"""
 class MainApp(MainLayoutCore):
     def __init__(self):
         try:
@@ -198,7 +225,8 @@ class MainApp(MainLayoutCore):
             global student_name
         except Exception as e:
             logging.error(f"Error: {e}")
-        
+    
+# Method to display a pop-up window with a message    
     def login_page(self, alignment=any):
         self.is_login_page = True
         try:
@@ -224,7 +252,8 @@ class MainApp(MainLayoutCore):
                 self.create_button(self.main_layout, "Sign Up", self.register, Qt.AlignmentFlag.AlignCenter, "registerButton")  
         except Exception as e:
             logging.error(f"Error: {e}")
-        
+  
+# Method to display the admin page        
     def admin_page(self, name, alignment=any):
         self.is_login_page = False
         self.name = name
@@ -279,7 +308,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-            
+   
+# Method to display the student page            
     def student_page(self, alignment=Qt.AlignmentFlag.AlignCenter):
         try:
             self.setWindowTitle(f"Student Panel for Attendance System")
@@ -309,6 +339,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
  
+# Method to login the admin
     def login(self):
         try:
             self.username = self.findChild(QLineEdit, "inputLabelUsername").text().strip()
@@ -331,7 +362,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-                       
+      
+# Method to register a admin                       
     def register(self):
         try:
             self.username = self.findChild(QLineEdit, "inputLabelUsername").text().strip()
@@ -351,7 +383,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-        
+    
+# Method to check the password complexity        
     def password_complexity(self, password):
         try:
             if len(password) < 8:
@@ -368,7 +401,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-    
+   
+# Method to add student names to the database    
     def add_student_name(self):
         try:
             global admin
@@ -389,6 +423,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
     
+# Method to add student pictures to the folder    
     def add_student_picture(self):
         try:
             if not os.path.exists(PHOTO_FILE_PATH):
@@ -402,7 +437,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-    
+   
+# Method to delete the student from the database    
     def delete_student(self):
         try:
             student_name = self.findChild(QComboBox, "dropdownMenu").currentText()
@@ -414,7 +450,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-    
+  
+# Method to replace the student name in the database    
     def replace_name(self):
         try:
             old_student_name = self.findChild(QComboBox, "dropdownMenuReplace").currentText()
@@ -429,7 +466,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-                   
+   
+# Method to show the student page                  
     def show_student_page(self):
         try:
             self.clear_layout(self.main_layout)
@@ -438,7 +476,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-            
+    
+# Method to start the video feed for face recognition            
     def start_video_feed(self):
         try:
             known_face_encodings = []
@@ -468,6 +507,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+# Method to update the video frame for face recognition
     def update_video_frame(self, frame):
         try:
             # Convert the frame to QImage and display it
@@ -481,6 +521,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
 
+# Method to stop the video feed for face recognition
     def stop_video_feed(self):
         try:
             if self.face_recognition_thread is not None:
@@ -490,6 +531,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
    
+# Method to add data to the database   
     def add_data(self):
         try:
             student_name = self.findChild(QComboBox, "dropdownMenuData").currentText()
@@ -510,6 +552,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
     
+# Method to check if the server is running    
     def is_server_running(self, script_name):
         try:
             for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -520,6 +563,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
     
+# Method to open the server    
     def open_server(self):
         try:
             if not self.is_server_running('web_server.py'):
@@ -531,9 +575,11 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
     
+# Method to check the complaints    
     def check_complaints(self):
         self.showPopUp('Work in progress', 'complaintPop')
     
+# Method to delete all data    
     def delete_all_data(self):
         try:
             os.system(f"rm -rf images_folder/*")
@@ -545,22 +591,28 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-        
+      
+# Method to generate a report in excel format        
     def report(self):
         try:
             attendance_data = self.db_student.db_get_attendance()
-            dataFrame = pd.DataFrame(attendance_data, columns=['student_name','date'])
+            dataFrame = pd.DataFrame(attendance_data, columns=['student_name', 'date'])
             dataFrame['date'] = dataFrame['date'].fillna("")
             groupData = dataFrame.groupby('student_name').agg({
                 'date': [lambda x: max(0, len(x) - 1), lambda x: list(x)]
             }).reset_index()
             groupData.columns = ['student_name', 'attendance_count', 'dates']
-            groupData.to_excel('attendance_report.xlsx', index=False)
+            report_data = groupData.to_dict(orient='records')
+            for record in report_data:
+                record['dates'] = " ; ".join(record['dates'][1:])
+            report_df = pd.DataFrame(report_data)
+            report_df.to_excel('attendance_report.xlsx', index=False)
             self.showPopUp('Report generated \n  successfully', 'raportPop')
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-        
+      
+# Method to show the student names from the database        
     def show_student_db(self):
         try:
             attendance_data = self.db_student.db_get_attendance()
@@ -576,6 +628,7 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)   
     
+# Method to show a pop-up window with a message
     def showPopUp(self, message, object_name=None):
         try:
             popUp = PopUpWindow()
@@ -584,7 +637,8 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-        
+    
+# Method to show the attendance status in a pop-up window        
     def show_attendance_popup(self, name, status):
         try:
             if status == "recorded":
@@ -595,15 +649,17 @@ class MainApp(MainLayoutCore):
             logging.error(f"Error: {e}")
             sys.exit(1)
     
+# Method to logout the admin
     def logout(self):
-        try:
-            self.stop_video_feed()
-            self.clear_layout(self.layout())
-            self.login_page(Qt.AlignmentFlag.AlignCenter) 
-        except Exception as e:
-            logging.error(f"Error: {e}")
-            sys.exit(1)
-        
+            try:
+                self.stop_video_feed()
+                self.clear_layout(self.layout())
+                self.login_page(Qt.AlignmentFlag.AlignCenter)
+            except Exception as e:
+                logging.error(f"Error during logout: {e}")
+                sys.exit(1)
+     
+# Method to handle key press events        
     def keyPressEvent(self, event):
         try:
             if self.is_login_page and event.key() == 16777220: 

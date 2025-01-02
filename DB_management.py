@@ -2,9 +2,16 @@ import sqlite3
 from datetime import datetime
 import logging
 
+# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+"""
+    This class handles the administration of the SQLite database,
+    including connecting to the database, executing SQL queries, 
+    and initializing the student table.
+"""
 class DBmanagement: 
+    # Connect to the database
     def db_connect(self):
         try:
             return sqlite3.connect('students.db')
@@ -12,6 +19,7 @@ class DBmanagement:
             logging.error(f"Error: {e}")
             return None
         
+    # Execute a database query
     def db_execute(self, query, params=None, fetch=False):
         try:
             with self.db_connect() as conn:
@@ -27,7 +35,7 @@ class DBmanagement:
             logging.error(f"Error executing query: {e}")
             return None
             
-            
+    # Initialize the students table
     def db_students_init(self):
         try:
             table = '''CREATE TABLE IF NOT EXISTS STUDENTS (
@@ -40,6 +48,7 @@ class DBmanagement:
             logging.error(f"Error creating table: {e}")
             return None
     
+    # Get all students from the database
     def db_get_students(self):
         try:
             return self.db_execute('SELECT * FROM STUDENTS ORDER BY Student_name ASC', fetch=True)
@@ -47,6 +56,7 @@ class DBmanagement:
             logging.error(f"Error fetching students: {e}")
             return None
 
+    # Delete a student from the database
     def db_delete_students(self, student_name):
         try:
             if not student_name:
@@ -57,6 +67,7 @@ class DBmanagement:
             logging.error(f"Error deleting student: {e}")
             return None
 
+    # Check if a student exists in the database
     def db_check_student(self, name):
         try:
             self.name = name
@@ -66,6 +77,7 @@ class DBmanagement:
             logging.error(f"Error checking student: {e}")
             return None
 
+    # Add a new student to the database
     def db_add_student(self, name):
         try:
             date = None
@@ -74,6 +86,7 @@ class DBmanagement:
             logging.error(f"Error adding student: {e}")
             return None
 
+    # Update a student's name in the database
     def db_update_student(self, old_name, new_name):
         try:
             self.old_name = old_name
@@ -84,6 +97,7 @@ class DBmanagement:
             logging.error(f"Error updating the student name: {e}")
             return None
 
+    # Record attendance for a student
     def db_record_attendance(self, student_name):
         try:
             date = datetime.now().strftime("%Y-%m-%d")
@@ -97,6 +111,7 @@ class DBmanagement:
             logging.error(f"Error recording attendance: {e}")
             return None
         
+    # Record manual attendance for a student
     def db_record_manual_attendance(self, student_name, date):
         try:
             check = self.db_execute('SELECT COUNT(*) FROM STUDENTS WHERE student_name = ? AND date = ?', (student_name, date), fetch=True)
@@ -108,6 +123,7 @@ class DBmanagement:
         except sqlite3.Error as e:
             logging.error(f"Error recording attendance: {e}")
         
+    # Get attendance records from the database
     def db_get_attendance(self):
         try:
             return self.db_execute('SELECT Student_name, Date FROM STUDENTS', fetch=True)
