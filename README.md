@@ -42,7 +42,7 @@ The Attendance Management System is a comprehensive application designed to mana
 │   ├── index.html
 ├── UI.py
 ├── web_server.py
-
+```
 
 ## Installation
 
