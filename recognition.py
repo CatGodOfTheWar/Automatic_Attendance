@@ -129,8 +129,8 @@ class FaceRecognitionThread(QThread):
                                 self.attendance_signal.emit(name, "already recorded")
                         
                         # Annotate the frame
-                        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-                        cv2.putText(frame, name, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (111, 218, 156), 2)
+                        cv2.putText(frame, name, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (111, 218, 156), 2)
 
                 # Emit the frame
                 self.frame_signal.emit(frame)

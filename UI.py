@@ -484,7 +484,9 @@ class MainApp(MainLayoutCore):
             known_face_names = []
             students = self.db_student.db_get_students()
             for student in students:
-                known_face_names.append(student[1])
+                if student[1] not in known_face_names:
+                    known_face_names.append(student[1])
+            print(known_face_names)
 
             for name in known_face_names:
                 try:
