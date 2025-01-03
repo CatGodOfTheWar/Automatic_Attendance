@@ -14,6 +14,7 @@ The Attendance Management System is a comprehensive application designed to mana
 
 ## Project Structure
 
+```plaintext
 .
 ├── __pycache__/
 ├── attendance_report.xlsx
@@ -89,4 +90,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Contact
 
-For any inquiries or support, please contact [yourname@domain.com](mailto:yourname@domain.com).
+For any inquiries or support, please contact [chirieacandrei@proton.me](mailto:chirieacandrei@proton.me).
