@@ -17,7 +17,11 @@ The Attendance Management System is a comprehensive application designed to mana
 ```plaintext
 .
 ├── __pycache__/
-├── attendance_report.xlsx
+├── data/
+│   ├── admin.db
+│   ├── students.db
+├── reports/
+│   ├── attendance_report.xlsx
 ├── DB_admin.py
 ├── DB_management.py
 ├── icons/
@@ -26,14 +30,13 @@ The Attendance Management System is a comprehensive application designed to mana
 │   ├── face-detection-adas-0001/
 │   │   ├── FP16/
 │   │   │   ├── face-detection-adas-0001.xml
-│   │   ├── FP16-INT8/
-│   │   │   ├── face-detection-adas-0001.xml
+│   │   │   ├── face-detection-adas-0001.bin
 │   │   ├── FP32/
 │   │       ├── face-detection-adas-0001.xml
+│   │       ├── face-detection-adas-0001.bin
 ├── main.py
 ├── README.md
 ├── recognition.py
-├── Students.txt
 ├── style_sheets/
 │   ├── style_admin.qss
 │   ├── style_student.qss
