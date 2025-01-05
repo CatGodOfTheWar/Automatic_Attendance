@@ -25,13 +25,25 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 # Define constants for file paths and other configurations
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPORTS_DIR = os.path.join(BASE_DIR, "reports")
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+# Create the data directory if it doesn't exist
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+# Create the reports directory if it doesn't exist
+if not os.path.exists(REPORTS_DIR):
+    os.makedirs(REPORTS_DIR)
+
 STYLE_PATH_LOGIN = os.path.join(BASE_DIR, "style_sheets", "style.qss")
 STYLE_PATH_ADMIN = os.path.join(BASE_DIR, "style_sheets", "style_admin.qss")
 STYLE_PATH_STUDENT = os.path.join(BASE_DIR, "style_sheets", "style_student.qss")
 ICON_PATH = os.path.join(BASE_DIR, "icons", "cat-2.png")
 USERNAME_ICON_PATH = os.path.join(BASE_DIR, "icons", "username.png")
 PASSWORD_ICON_PATH = os.path.join(BASE_DIR, "icons", "password.png")
-DB_ADMIN_PATH = os.path.join(BASE_DIR, "Teste", "admin.db")
+DB_ADMIN_PATH = os.path.join(DATA_DIR, "admin.db")
+DB_STUDENT_PATH = os.path.join(DATA_DIR, "students.db")
 MODEL_PATH = os.path.join(BASE_DIR, "intel", "face-detection-adas-0001", "FP16", "face-detection-adas-0001.xml")
 MODEL_BIN = os.path.join(BASE_DIR, "intel", "face-detection-adas-0001", "FP16", "face-detection-adas-0001.bin")
 PHOTO_FILE_PATH = os.path.join(BASE_DIR, "imgs")
@@ -568,9 +580,9 @@ class MainApp(MainLayoutCore):
 # Method to open the server    
     def open_server(self):
         try:
-            if not self.is_server_running('web_server.py'):
+            if not self.is_server_running(f'{BASE_DIR}/web_server.py'):
                 self.showPopUp('User Fingerprint\n or Password', 'serverPop')
-                subprocess.Popen(['python3', 'web_server.py'])
+                subprocess.Popen(['python3', f'{BASE_DIR}/web_server.py'])
             else:
                 self.showPopUp('Server is \nalready running', 'serverPop')
         except Exception as e:
@@ -608,7 +620,8 @@ class MainApp(MainLayoutCore):
             for record in report_data:
                 record['dates'] = " ; ".join(record['dates'][1:])
             report_df = pd.DataFrame(report_data)
-            report_df.to_excel('attendance_report.xlsx', index=False)
+            report_path = os.path.join(REPORTS_DIR, 'attendance_report.xlsx')
+            report_df.to_excel(report_path, index=False)
             self.showPopUp('Report generated \n  successfully', 'raportPop')
         except Exception as e:
             logging.error(f"Error: {e}")
@@ -669,7 +682,3 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-     
-    
-    
-    

@@ -140,7 +140,6 @@ class FaceRecognitionThread(QThread):
 
         finally:
             self.cap.release()
-            cv2.destroyAllWindows()
             logging.info("Resources released, application closed.")
 
     def stop(self):

@@ -1,9 +1,15 @@
 import bcrypt
 import sqlite3
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# Define constants for file paths and other configurations
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+DB_ADMIN_PATH = os.path.join(DATA_DIR, "admin.db")
 
 """
     This class handles the administration of the SQLite database,
@@ -14,7 +20,7 @@ class DBAdmin:
     # Connect to the SQLite database
     def db_connect(self):
         try:
-            return sqlite3.connect('admin.db')
+            return sqlite3.connect(DB_ADMIN_PATH)
         except sqlite3.Error as e:
             logging.error(f"Error connecting to database: {e}")
             return None
