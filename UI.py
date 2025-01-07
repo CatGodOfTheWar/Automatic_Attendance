@@ -442,10 +442,13 @@ class MainApp(MainLayoutCore):
                 os.makedirs(PHOTO_FILE_PATH, exist_ok=True)
             images_paths = self.selection_window("Images (*.png *.xpm *.jpg *.jpeg);;All Files (*)", "Select Photos")
             print(images_paths)
-            for img in images_paths:
-                img_name = os.path.basename(img)
+            try:
+                for img in images_paths:
+                    img_name = os.path.basename(img)
                 if not os.path.exists(f"{PHOTO_FILE_PATH}/{img_name}"):
                     os.system(f"mv {img} {PHOTO_FILE_PATH}")
+            except Exception as e:
+                logging.error(f"Error {e}")
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
