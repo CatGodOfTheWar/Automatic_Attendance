@@ -458,6 +458,8 @@ class MainApp(MainLayoutCore):
         try:
             student_name = self.findChild(QComboBox, "dropdownMenu").currentText()
             if student_name:
+                # if os.path.exists(f"{PHOTO_FILE_PATH}/{student_name}.jpg"):
+                #     os.remove(f"{PHOTO_FILE_PATH}/{student_name}.jpg")
                 self.db_student.db_delete_students(student_name)
                 self.clear_layout(self.layout())
                 self.admin_page(self.username, Qt.AlignmentFlag.AlignCenter) 
@@ -472,6 +474,12 @@ class MainApp(MainLayoutCore):
             old_student_name = self.findChild(QComboBox, "dropdownMenuReplace").currentText()
             new_student_name = self.findChild(QLineEdit, "inputLabelReplace").text().strip()
             if len(new_student_name) > 1:
+                # Rename the photo if it exists
+                old_photo_path = os.path.join(PHOTO_FILE_PATH, f"{old_student_name}.jpg")
+                new_photo_path = os.path.join(PHOTO_FILE_PATH, f"{new_student_name}.jpg")
+                if os.path.exists(old_photo_path):
+                    os.rename(old_photo_path, new_photo_path)
+                # Update the student name in the database
                 self.db_student.db_update_student(old_student_name, new_student_name)
                 self.clear_layout(self.layout())
                 self.admin_page(self.username, Qt.AlignmentFlag.AlignCenter) 
