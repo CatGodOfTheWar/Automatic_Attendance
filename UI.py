@@ -15,6 +15,7 @@ from datetime import datetime
 import pandas as pd
 import subprocess
 import psutil
+import shutil
 import face_recognition
 from DB_admin import DBAdmin
 from DB_management import DBmanagement
@@ -161,7 +162,7 @@ class MainLayoutCore(QWidget):
         v_layout.setAlignment(alignment)
         layout.addWidget(widget)
         return v_layout
-    
+  
 # Method to clear all widgets from a layout    
     def clear_layout(self, layout):
         if layout is not None:
@@ -440,18 +441,22 @@ class MainApp(MainLayoutCore):
         try:
             if not os.path.exists(PHOTO_FILE_PATH):
                 os.makedirs(PHOTO_FILE_PATH, exist_ok=True)
-            images_paths = self.selection_window("Images (*.png *.xpm *.jpg *.jpeg);;All Files (*)", "Select Photos")
+            try:
+                images_paths = self.selection_window("Images (*.png *.xpm *.jpg *.jpeg);;All Files (*)", "Select Photos")
+            except KeyboardInterrupt:
+                logging.info("File selection was interrupted by the user.")
+                return
             print(images_paths)
             try:
                 for img in images_paths:
                     img_name = os.path.basename(img)
-                if not os.path.exists(f"{PHOTO_FILE_PATH}/{img_name}"):
-                    os.system(f"mv {img} {PHOTO_FILE_PATH}")
+                    destination_path = os.path.join(PHOTO_FILE_PATH, img_name)
+                    if not os.path.exists(destination_path):
+                        shutil.move(img, destination_path)
             except Exception as e:
-                logging.error(f"Error {e}")
+                logging.error(f"Error moving file: {e}")
         except Exception as e:
             logging.error(f"Error: {e}")
-            sys.exit(1)
    
 # Method to delete the student from the database    
     def delete_student(self):
@@ -607,10 +612,10 @@ class MainApp(MainLayoutCore):
 # Method to delete all data    
     def delete_all_data(self):
         try:
-            os.system(f"rm -rf images_folder/*")
-            os.system("rm -rf students.db")
-            os.system("rm -rf admin.db")
-            os.system("rm -rf attendance_report.xlsx")
+            os.system(f"rm -rf imgs/*")
+            os.system(f"rm -rf data/students.db")
+            os.system(f"rm -rf data/admin.db")
+            os.system(f"rm -rf reports/*")
             self.showPopUp('All data deleted \n  successfully', 'deletePop')
             sys.exit(1)
         except Exception as e:
@@ -637,7 +642,7 @@ class MainApp(MainLayoutCore):
         except Exception as e:
             logging.error(f"Error: {e}")
             sys.exit(1)
-      
+ 
 # Method to show the student names from the database        
     def show_student_db(self):
         try:
